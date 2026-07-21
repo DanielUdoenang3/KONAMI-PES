@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block head_title %}Account{% endblock %} — PES Arena</title>
+  <link rel="stylesheet" href="{% static 'css/output.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col bg-neutral-950 text-neutral-100 font-sans antialiased">
+  {% include "partials/navbar.html" %}
+  <div class="flex-1">
+    {% block body %}
+      {% block content %}{% endblock content %}
+    {% endblock body %}
+  </div>
+  {% include "partials/footer.html" %}
+  {% block extra_body %}{% endblock %}
+</body>
+</html>

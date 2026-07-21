@@ -1,0 +1,23 @@
+{% extends "allauth/layouts/base.html" %}
+{% block body %}
+<section class="mx-auto max-w-2xl px-6 py-16">
+  <nav class="mb-10 flex flex-wrap gap-2 border-b border-white/10 pb-6 text-sm">
+    {% url 'account_email' as email_url_ %}
+    {% if email_url_ %}<a href="{{ email_url_ }}" class="rounded-full border border-white/10 px-4 py-1.5 text-neutral-300 hover:border-emerald-400/50 hover:text-white transition">Email</a>{% endif %}
+    {% url 'account_change_password' as change_password_url_ %}
+    {% if change_password_url_ %}<a href="{{ change_password_url_ }}" class="rounded-full border border-white/10 px-4 py-1.5 text-neutral-300 hover:border-emerald-400/50 hover:text-white transition">Password</a>{% endif %}
+    {% url 'socialaccount_connections' as connections_url_ %}
+    {% if connections_url_ %}<a href="{{ connections_url_ }}" class="rounded-full border border-white/10 px-4 py-1.5 text-neutral-300 hover:border-emerald-400/50 hover:text-white transition">Connections</a>{% endif %}
+    {% url 'account_logout' as logout_url_ %}
+    {% if logout_url_ %}<button type="button" onclick="document.getElementById('logout-modal').showModal()" class="rounded-full border border-red-500/20 px-4 py-1.5 text-red-400 hover:border-red-400/50 hover:text-red-300 transition">Sign out</button>{% endif %}
+  </nav>
+  {% if messages %}
+    <div class="mb-6 space-y-2">
+      {% for message in messages %}
+        <div class="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% block content %}{% endblock %}
+</section>
+{% endblock %}

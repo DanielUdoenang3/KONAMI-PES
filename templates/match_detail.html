@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}{{ match }} — Match Center{% endblock %}
+
+{% block content %}
+<!-- Match Center Header -->
+<section class="relative border-b border-white/10 bg-neutral-900/40 py-12 md:py-16 overflow-hidden">
+  <div class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.08),_transparent_50%)]"></div>
+  
+  <div class="mx-auto max-w-7xl px-6">
+    <!-- Breadcrumbs / Top Actions -->
+    <div class="flex items-center justify-between mb-8 text-xs">
+      <a href="{% url 'tournament_detail' match.tournament.slug %}" class="flex items-center gap-2 text-neutral-400 hover:text-white transition">
+        <span>←</span> Back to {{ match.tournament.name }}
+      </a>
+      
+      <!-- Favorite Match Button -->
+      {% if user.is_authenticated %}
+        <form method="post" action="{% url 'toggle_favorite_match' match.id %}">
+          {% csrf_token %}
+          <button type="submit" class="flex items-center gap-2 rounded-full border border-white/10 px-4 py-1.5 font-semibold transition hover:bg-white/5 {% if is_favorited %}bg-yellow-500/10 border-yellow-500/30 text-yellow-400{% else %}text-neutral-300{% endif %}">
+            ⭐ {% if is_favorited %}Favorited (Alerts Enabled){% else %}Favorite Match (Get Alerts){% endif %}
+          </button>
+        </form>
+      {% endif %}
+    </div>
+
+    <!-- Match Arena Visual -->
+    <div class="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-4 max-w-4xl mx-auto py-4">
+      
+      <div class="flex flex-col items-center text-center flex-1 min-w-0">
+        {% if match.home and match.home.player.avatar %}
+          <img src="{{ match.home.player.avatar.url }}" alt="" class="h-24 w-24 rounded-full object-cover border-2 border-white/10 shadow-2xl">
+        {% else %}
+          <div class="h-24 w-24 rounded-full bg-neutral-800 border-2 border-white/10 flex items-center justify-center text-3xl shadow-2xl">👤</div>
+        {% endif %}
+        <h2 class="mt-4 text-xl font-extrabold text-white truncate w-full">
+          {{ match.home_name }}
+        </h2>
+        <span class="text-xs text-neutral-500 mt-1 block">{% if match.home %}{{ match.home.player.name }}{% else %}Player slot unassigned{% endif %}</span>
+      </div>
+
+      <!-- Scoreboard Center -->
+      <div class="flex flex-col items-center justify-center text-center px-4">
+        <span class="text-[10px] font-bold uppercase tracking-widest text-neutral-500 bg-neutral-900 border border-white/5 px-3 py-1 rounded-full">
+          {{ match.round_name }} · Leg {{ match.leg }}
+        </span>
+        
+        <div class="mt-4 flex items-center justify-center font-mono font-black text-4xl sm:text-6xl text-white gap-4">
+          {% if match.status == 'scheduled' %}
+            <span class="text-2xl sm:text-4xl text-neutral-500 font-sans tracking-wide">VS</span>
+          {% else %}
+            <span>{{ match.home_score }}</span>
+            <span class="text-neutral-700 text-3xl sm:text-5xl">:</span>
+            <span>{{ match.away_score }}</span>
+          {% endif %}
+        </div>
+
+        <span class="mt-4 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider border transition"
+              style="color: {{ match.tournament.primary_color }}; border-color: {{ match.tournament.primary_color }}33; background-color: {{ match.tournament.primary_color }}0a;">
+          {{ match.get_status_display }}
+        </span>
+      </div>
+
+      <!-- Away Participant -->
+      <div class="flex flex-col items-center text-center flex-1 min-w-0">
+        {% if match.away and match.away.player.avatar %}
+          <img src="{{ match.away.player.avatar.url }}" alt="" class="h-24 w-24 rounded-full object-cover border-2 border-white/10 shadow-2xl">
+        {% else %}
+          <div class="h-24 w-24 rounded-full bg-neutral-800 border-2 border-white/10 flex items-center justify-center text-3xl shadow-2xl">👤</div>
+        {% endif %}
+        <h2 class="mt-4 text-xl font-extrabold text-white truncate w-full">
+          {{ match.away_name }}
+        </h2>
+        <span class="text-xs text-neutral-500 mt-1 block">{% if match.away %}{{ match.away.player.name }}{% else %}Player slot unassigned{% endif %}</span>
+      </div>
+
+    </div>
+
+    <!-- Venue & Date Footer -->
+    <div class="mt-8 pt-6 border-t border-white/5 text-center text-xs text-neutral-500 flex flex-wrap justify-center gap-6">
+      <span>📍 {{ match.venue|default:"PES Stadium Arena" }}</span>
+      <span>⏰ {{ match.scheduled_at|date:"d M Y @ H:i"|default:"Time TBD" }}</span>
+    </div>
+  </div>
+</section>
+
+<!-- Match Details Tabs -->
+<div class="mx-auto max-w-7xl px-6 py-12">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+    
+    <!-- Left column: Match Stats & Timeline -->
+    <div class="lg:col-span-2 space-y-12">
+      
+      <!-- Stats Bars -->
+      <div class="bg-neutral-900/30 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-md">
+        <h3 class="text-lg font-extrabold text-white mb-6">Match Statistics</h3>
+        
+        {% if match.status == 'scheduled' %}
+          <p class="text-center text-xs text-neutral-500 py-6">Statistics will be logged when match goes active/completed.</p>
+        {% else %}
+          <div class="space-y-6">
+            <!-- Posession -->
+            {% with home_val=match.home_possession away_val=match.away_possession %}
+              <div class="space-y-2">
+                <div class="flex justify-between text-xs font-bold text-neutral-300">
+                  <span>{{ home_val }}%</span>
+                  <span class="uppercase tracking-wider text-[10px] text-neutral-500 font-semibold">Possession</span>
+                  <span>{{ away_val }}%</span>
+                </div>
+                <div class="h-2 w-full rounded-full bg-neutral-950 flex overflow-hidden">
+                  <div class="bg-emerald-500 h-full rounded-l-full transition-all duration-500" style="width: {{ home_val }}%;"></div>
+                  <div class="bg-blue-500 h-full rounded-r-full transition-all duration-500" style="width: {{ away_val }}%;"></div>
+                </div>
+              </div>
+            {% endwith %}
+
+            <!-- Shots -->
+            {% with home_val=match.home_shots away_val=match.away_shots %}
+              <div class="space-y-2">
+                <div class="flex justify-between text-xs font-bold text-neutral-300">
+                  <span>{{ home_val }}</span>
+                  <span class="uppercase tracking-wider text-[10px] text-neutral-500 font-semibold">Shots</span>
+                  <span>{{ away_val }}</span>
+                </div>
+                <!-- Custom calculations for visual progress width -->
+                {% with total=home_val|add:away_val %}
+                  <div class="h-2 w-full rounded-full bg-neutral-950 flex overflow-hidden">
+                    <div class="bg-emerald-500 h-full rounded-l-full" style="width: {% if total > 0 %}{{ home_val|floatformat:2 }} * 100 / {{ total }}{% else %}50{% endif %}%;"></div>
+                    <div class="bg-blue-500 h-full rounded-r-full" style="width: {% if total > 0 %}{{ away_val|floatformat:2 }} * 100 / {{ total }}{% else %}50{% endif %}%;"></div>
+                  </div>
+                {% endwith %}
+              </div>
+            {% endwith %}
+
+            <!-- Shots on Target -->
+            {% with home_val=match.home_shots_on_target away_val=match.away_shots_on_target %}
+              <div class="space-y-2">
+                <div class="flex justify-between text-xs font-bold text-neutral-300">
+                  <span>{{ home_val }}</span>
+                  <span class="uppercase tracking-wider text-[10px] text-neutral-500 font-semibold">Shots on Target</span>
+                  <span>{{ away_val }}</span>
+                </div>
+                {% with total=home_val|add:away_val %}
+                  <div class="h-2 w-full rounded-full bg-neutral-950 flex overflow-hidden">
+                    <div class="bg-emerald-500 h-full rounded-l-full" style="width: {% if total > 0 %}{{ home_val|floatformat:2 }} * 100 / {{ total }}{% else %}50{% endif %}%;"></div>
+                    <div class="bg-blue-500 h-full rounded-r-full" style="width: {% if total > 0 %}{{ away_val|floatformat:2 }} * 100 / {{ total }}{% else %}50{% endif %}%;"></div>
+                  </div>
+                {% endwith %}
+              </div>
+            {% endwith %}
+
+            <!-- Fouls -->
+            {% with home_val=match.home_fouls away_val=match.away_fouls %}
+              <div class="space-y-2">
+                <div class="flex justify-between text-xs font-bold text-neutral-300">
+                  <span>{{ home_val }}</span>
+                  <span class="uppercase tracking-wider text-[10px] text-neutral-500 font-semibold">Fouls</span>
+                  <span>{{ away_val }}</span>
+                </div>
+                {% with total=home_val|add:away_val %}
+                  <div class="h-2 w-full rounded-full bg-neutral-950 flex overflow-hidden">
+                    <div class="bg-emerald-500 h-full rounded-l-full" style="width: {% if total > 0 %}{{ home_val|floatformat:2 }} * 100 / {{ total }}{% else %}50{% endif %}%;"></div>
+                    <div class="bg-blue-500 h-full rounded-r-full" style="width: {% if total > 0 %}{{ away_val|floatformat:2 }} * 100 / {{ total }}{% else %}50{% endif %}%;"></div>
+                  </div>
+                {% endwith %}
+              </div>
+            {% endwith %}
+
+            <!-- Corners -->
+            {% with home_val=match.home_corners away_val=match.away_corners %}
+              <div class="space-y-2">
+                <div class="flex justify-between text-xs font-bold text-neutral-300">
+                  <span>{{ home_val }}</span>
+                  <span class="uppercase tracking-wider text-[10px] text-neutral-500 font-semibold">Corners</span>
+                  <span>{{ away_val }}</span>
+                </div>
+                {% with total=home_val|add:away_val %}
+                  <div class="h-2 w-full rounded-full bg-neutral-950 flex overflow-hidden">
+                    <div class="bg-emerald-500 h-full rounded-l-full" style="width: {% if total > 0 %}{{ home_val|floatformat:2 }} * 100 / {{ total }}{% else %}50{% endif %}%;"></div>
+                    <div class="bg-blue-500 h-full rounded-r-full" style="width: {% if total > 0 %}{{ away_val|floatformat:2 }} * 100 / {{ total }}{% else %}50{% endif %}%;"></div>
+                  </div>
+                {% endwith %}
+              </div>
+            {% endwith %}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Timeline / Audit Trail -->
+      <div class="bg-neutral-900/30 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-md">
+        <h3 class="text-lg font-extrabold text-white mb-6">Match Timeline & Audit Trail</h3>
+        
+        <div class="relative pl-6 border-l-2 border-white/10 space-y-6">
+          {% for event in events %}
+            <div class="relative">
+              <!-- Dot Indicator -->
+              <span class="absolute -left-[31px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-neutral-900 border-2 border-white/20 text-[10px]">
+                {% if event.event_type == 'goal' %}⚽{% else %}✨{% endif %}
+              </span>
+              
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <span class="font-mono text-sm font-bold text-emerald-400 mr-2">{{ event.minute }}'</span>
+                  <span class="text-white font-extrabold">{{ event.player.name }}</span>
+                  <span class="text-xs text-neutral-400 ml-1">
+                    ({{ event.get_event_type_display }})
+                  </span>
+                </div>
+                {% if event.detail %}
+                  <span class="text-xs italic text-neutral-500">{{ event.detail }}</span>
+                {% endif %}
+              </div>
+            </div>
+          {% empty %}
+            <p class="text-xs text-neutral-500 py-2">No key timeline events logged yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Match Discussion / Comments -->
+    <div class="space-y-8">
+      <div class="bg-neutral-900/30 border border-white/10 rounded-3xl p-6 backdrop-blur-md">
+        <h3 class="text-lg font-extrabold text-white mb-6">Match Chat & Discussion</h3>
+        
+        {% if user.is_authenticated %}
+          <!-- Add Comment Form -->
+          <form method="post" action="{% url 'add_match_comment' match.id %}" class="mb-8 space-y-3">
+            {% csrf_token %}
+            <textarea name="body" placeholder="Talk about the match, predicted scores, tactics..." rows="3" class="w-full rounded-xl border border-white/10 bg-neutral-950 px-4 py-3 text-sm text-white placeholder-neutral-500 focus:border-emerald-400 focus:outline-none transition" required></textarea>
+            <button type="submit" class="w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-neutral-950 hover:bg-emerald-400 transition">
+              Send Message
+            </button>
+          </form>
+        {% else %}
+          <div class="p-4 bg-neutral-950/40 border border-white/5 rounded-xl text-center mb-8">
+            <p class="text-xs text-neutral-400">Join the discussion! Log in or sign up to comment.</p>
+            <a href="{% url 'account_login' %}" class="mt-3 inline-block text-xs font-bold text-emerald-400 hover:text-emerald-300 transition">
+              Log In →
+            </a>
+          </div>
+        {% endif %}
+
+        <!-- Comments Feed -->
+        <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+          {% for comment in comments %}
+            <div class="p-3 bg-neutral-950/20 border border-white/5 rounded-xl">
+              <div class="flex items-center justify-between text-[10px] text-neutral-500 mb-1">
+                <span class="font-bold text-neutral-300">{{ comment.user.username }}</span>
+                <span>{{ comment.created_at|timesince }} ago</span>
+              </div>
+              <p class="text-sm text-neutral-300">{{ comment.body }}</p>
+            </div>
+          {% empty %}
+            <p class="text-center text-xs text-neutral-500 py-6">No discussions logged yet. Be the first to start the chat!</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Push Notification Simulator using Chrome/Browser Notification API -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Request permission on click if not granted
+    const favBtn = document.querySelector('button[type="submit"]');
+    if (favBtn) {
+      favBtn.addEventListener('click', () => {
+        if (Notification.permission === 'default') {
+          Notification.requestPermission();
+        }
+      });
+    }
+
+    // Check if Django alert messages has a simulated push notification alert
+    {% if messages %}
+      {% for message in messages %}
+        {% if "[PUSH ALERT SIMULATOR]" in message.tags or "[PUSH ALERT SIMULATOR]" in message.message or "Notification" in message.message %}
+          if (Notification.permission === 'granted') {
+            new Notification('PES Arena Match Update', {
+              body: '{{ message.message|escapejs }}',
+              icon: 'https://cdn-icons-png.flaticon.com/512/861/861512.png'
+            });
+          }
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  });
+</script>
+{% endblock %}

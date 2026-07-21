@@ -1,0 +1,86 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Tournaments — PES Control{% endblock %}
+
+{% block header_title %}Tournaments{% endblock %}
+{% block header_description %}Manage all registered PES tournament arenas{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'create_tournament' %}" class="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-neutral-950 hover:bg-emerald-400 transition shadow-[0_0_15px_rgba(52,211,153,0.2)]">
+    Create Tournament
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="rounded-2xl border border-white/10 bg-neutral-900/40 backdrop-blur-md overflow-hidden flex flex-col">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-white/5 bg-neutral-950/20 text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+            <th class="p-4 pl-6">Tournament Name</th>
+            <th class="p-4">Slug</th>
+            <th class="p-4">Timeline</th>
+            <th class="p-4">Status</th>
+            <th class="p-4">Colors</th>
+            <th class="p-4 text-right pr-6">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5 text-sm text-neutral-300">
+          {% for t in tournaments %}
+            <tr class="hover:bg-white/5 transition">
+              <td class="p-4 pl-6 font-semibold text-white">
+                <div class="flex items-center gap-3">
+                  {% if t.logo %}
+                    <img src="{{ t.logo.url }}" alt="{{ t.name }}" class="h-8 w-8 rounded-lg object-cover">
+                  {% else %}
+                    <span class="h-8 w-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400">
+                      {{ t.name|slice:":2"|upper }}
+                    </span>
+                  {% endif %}
+                  {{ t.name }}
+                </div>
+              </td>
+              <td class="p-4 text-xs font-mono text-neutral-400">{{ t.slug }}</td>
+              <td class="p-4 text-xs text-neutral-400">
+                {% if t.start_date and t.end_date %}
+                  {{ t.start_date|date:"M d, Y" }} — {{ t.end_date|date:"M d, Y" }}
+                {% else %}
+                  N/A
+                {% endif %}
+              </td>
+              <td class="p-4">
+                {% if t.status == 'active' %}
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Active
+                  </span>
+                {% elif t.status == 'upcoming' %}
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    Upcoming
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-800 text-neutral-400 border border-white/5">
+                    Completed
+                  </span>
+                {% endif %}
+              </td>
+              <td class="p-4">
+                <div class="flex items-center gap-1">
+                  <span class="h-4 w-4 rounded-full border border-white/10" style="background-color: {{ t.primary_color }}" title="Primary: {{ t.primary_color }}"></span>
+                  <span class="h-4 w-4 rounded-full border border-white/10" style="background-color: {{ t.secondary_color }}" title="Secondary: {{ t.secondary_color }}"></span>
+                  <span class="h-4 w-4 rounded-full border border-white/10" style="background-color: {{ t.accent_color }}" title="Accent: {{ t.accent_color }}"></span>
+                </div>
+              </td>
+              <td class="p-4 text-right pr-6">
+                <a href="{% url 'edit_tournament' t.id %}" class="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition">Edit Details</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="p-8 text-center text-xs text-neutral-500">No tournaments registered yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

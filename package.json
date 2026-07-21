@@ -1,0 +1,17 @@
+{
+  "name": "konami-pes",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tailwindcss -i ./static/src/input.css -o ./static/css/output.css --watch",
+    "build": "tailwindcss -i ./static/src/input.css -o ./static/css/output.css --minify"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  }
+}

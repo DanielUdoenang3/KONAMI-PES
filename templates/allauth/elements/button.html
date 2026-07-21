@@ -1,0 +1,16 @@
+{% load allauth %}
+{% if attrs.href %}
+<a href="{{ attrs.href }}" {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+   class="inline-block transition {% if 'danger' in attrs.tags %}rounded-full border border-red-500/30 px-6 py-2.5 text-sm font-semibold text-red-400 hover:bg-red-500/10{% elif 'secondary' in attrs.tags %}rounded-full border border-white/15 px-6 py-2.5 text-sm font-semibold text-white hover:bg-white/5{% else %}rounded-full bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-neutral-950 hover:bg-emerald-400{% endif %}">
+  {% slot %}{% endslot %}
+</a>
+{% else %}
+<button {% if attrs.form %}form="{{ attrs.form }}"{% endif %}
+        {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+        {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
+        {% if attrs.value %}value="{{ attrs.value }}"{% endif %}
+        {% if attrs.type %}type="{{ attrs.type }}"{% endif %}
+        class="transition {% if 'danger' in attrs.tags %}rounded-full border border-red-500/30 px-6 py-2.5 text-sm font-semibold text-red-400 hover:bg-red-500/10{% elif 'secondary' in attrs.tags %}rounded-full border border-white/15 px-6 py-2.5 text-sm font-semibold text-white hover:bg-white/5{% else %}rounded-full bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-neutral-950 hover:bg-emerald-400{% endif %}">
+  {% slot %}{% endslot %}
+</button>
+{% endif %}

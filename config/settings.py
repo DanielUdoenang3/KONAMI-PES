@@ -46,6 +46,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'konami',
+    "django.contrib.sites",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
 ]
 
 MIDDLEWARE = [
@@ -56,6 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -63,7 +69,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -128,4 +134,54 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"       
+
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media" 
+
+# STATICFILES_FINDERS = [
+#     "django.contrib.staticfiles.finders.FileSystemFinder",
+#     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+#     "compressor.finders.CompressorFinder",  # optional if using django-compressor
+# ]
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",              # still needed for /admin/ login
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+SITE_ID = 1
+
+# --- Account behavior ---
+ACCOUNT_ADAPTER = "konami.adapters.CustomAccountAdapter"
+SOCIALACCOUNT_ADAPTER = "konami.adapters.CustomSocialAccountAdapter"
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
+ACCOUNT_EMAIL_VERIFICATION = "none"        # switch to "mandatory" once you've set up real email sending
+
+LOGIN_REDIRECT_URL = "landing"
+LOGOUT_REDIRECT_URL = "landing"
+
+# --- Google social login ---
+SOCIALACCOUNT_LOGIN_ON_GET = True           # skip the "continue as..." confirmation page
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True   # this is the setting that makes
+                                                            # "Continue with Google" log in
+                                                            # to an existing account OR create
+                                                            # a new one, based on matching email
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "EMAIL_AUTHENTICATION": True,
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+        "APPS": [
+            {
+                "client_id": os.environ.get("GOOGLE_CLIENT_ID"),
+                "secret": os.environ.get("GOOGLE_CLIENT_SECRET"),
+                "key": "",
+            },
+        ],
+    }
+}

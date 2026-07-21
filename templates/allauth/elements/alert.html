@@ -1,0 +1,4 @@
+{% load allauth %}
+<div class="rounded-lg border px-4 py-3 text-sm {% if 'error' in attrs.level or 'danger' in attrs.level %}border-red-500/30 bg-red-500/10 text-red-400{% else %}border-emerald-500/30 bg-emerald-500/10 text-emerald-300{% endif %}">
+  {% slot message %}{% endslot %}
+</div>

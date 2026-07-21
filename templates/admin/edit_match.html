@@ -1,0 +1,275 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Edit Match — PES Control{% endblock %}
+
+{% block header_title %}Edit Match{% endblock %}
+{% block header_description %}Update scores, stats and timeline events for this match{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'admin_matches' %}" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-300 hover:text-white rounded-xl border border-white/10 hover:bg-white/5 transition">
+    Back to list
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="space-y-8 max-w-6xl mx-auto">
+    <!-- Main Update Form -->
+    <form method="post" class="space-y-8 bg-neutral-900/40 border border-white/10 rounded-2xl p-6 sm:p-8 backdrop-blur-md">
+      {% csrf_token %}
+      
+      {% if form.errors %}
+        <div class="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
+          <p class="font-bold">Please correct the following errors:</p>
+          <ul class="mt-2 list-disc list-inside space-y-1">
+            {% for field, errors in form.errors.items %}
+              {% for error in errors %}
+                <li>{{ field|capfirst }}: {{ error }}</li>
+              {% endfor %}
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Settings -->
+        <div class="space-y-4">
+          <h2 class="text-base font-bold text-white border-b border-white/5 pb-2">Match Settings</h2>
+          <div>
+            <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Status</label>
+            {{ form.status }}
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Venue</label>
+            {{ form.venue }}
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Scheduled At</label>
+            {{ form.scheduled_at }}
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Round / Matchday</label>
+            {{ form.round_name }}
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Leg</label>
+            {{ form.leg }}
+          </div>
+          <div class="hidden">
+            {{ form.stage }} {{ form.group }} {{ form.home }} {{ form.away }}
+          </div>
+        </div>
+
+        <!-- Scores and Statistics -->
+        <div class="lg:col-span-2 space-y-6">
+          <h2 class="text-base font-bold text-white border-b border-white/5 pb-2">Scores & Head-to-Head Statistics</h2>
+          
+          <!-- H2H Scores -->
+          <div class="grid grid-cols-2 gap-6 bg-neutral-950/40 p-4 rounded-xl border border-white/5">
+            <div>
+              <p class="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">
+                {{ match.home_name }} Score
+              </p>
+              {{ form.home_score }}
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">
+                {{ match.away_name }} Score
+              </p>
+              {{ form.away_score }}
+            </div>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Shots -->
+            <div class="p-4 bg-neutral-950/20 border border-white/5 rounded-xl space-y-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-neutral-400">Shots</span>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-[10px] text-neutral-500 uppercase">Home</label>
+                  {{ form.home_shots }}
+                </div>
+                <div>
+                  <label class="text-[10px] text-neutral-500 uppercase">Away</label>
+                  {{ form.away_shots }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Shots on Target -->
+            <div class="p-4 bg-neutral-950/20 border border-white/5 rounded-xl space-y-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-neutral-400">Shots on Target</span>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-[10px] text-neutral-500 uppercase">Home</label>
+                  {{ form.home_shots_on_target }}
+                </div>
+                <div>
+                  <label class="text-[10px] text-neutral-500 uppercase">Away</label>
+                  {{ form.away_shots_on_target }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Possession -->
+            <div class="p-4 bg-neutral-950/20 border border-white/5 rounded-xl space-y-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-neutral-400">Possession (%)</span>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-[10px] text-neutral-500 uppercase">Home</label>
+                  {{ form.home_possession }}
+                </div>
+                <div>
+                  <label class="text-[10px] text-neutral-500 uppercase">Away</label>
+                  {{ form.away_possession }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Fouls -->
+            <div class="p-4 bg-neutral-950/20 border border-white/5 rounded-xl space-y-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-neutral-400">Fouls</span>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-[10px] text-neutral-500 uppercase">Home</label>
+                  {{ form.home_fouls }}
+                </div>
+                <div>
+                  <label class="text-[10px] text-neutral-500 uppercase">Away</label>
+                  {{ form.away_fouls }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Corners -->
+            <div class="p-4 bg-neutral-950/20 border border-white/5 rounded-xl space-y-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-neutral-400">Corners</span>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-[10px] text-neutral-500 uppercase">Home</label>
+                  {{ form.home_corners }}
+                </div>
+                <div>
+                  <label class="text-[10px] text-neutral-500 uppercase">Away</label>
+                  {{ form.away_corners }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Cards -->
+            <div class="p-4 bg-neutral-950/20 border border-white/5 rounded-xl space-y-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-neutral-400">Cards Summary</span>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-[10px] text-neutral-500 uppercase">Home Y / R</label>
+                  <div class="flex gap-2">
+                    {{ form.home_yellow_cards }}
+                    {{ form.home_red_cards }}
+                  </div>
+                </div>
+                <div>
+                  <label class="text-[10px] text-neutral-500 uppercase">Away Y / R</label>
+                  <div class="flex gap-2">
+                    {{ form.away_yellow_cards }}
+                    {{ form.away_red_cards }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pt-6 border-t border-white/10 flex items-center justify-between gap-4">
+        <a href="{% url 'delete_match' match.id %}" class="rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-3 text-sm font-semibold text-red-400 hover:bg-red-500/20 transition">
+          Delete Match
+        </a>
+        <div class="flex items-center gap-3">
+          <a href="{% url 'admin_matches' %}" class="rounded-xl border border-white/15 px-6 py-3 text-sm font-semibold text-white hover:bg-white/5 transition">
+            Cancel
+          </a>
+          <button type="submit" class="rounded-xl bg-emerald-500 px-8 py-3 text-sm font-semibold text-neutral-950 hover:bg-emerald-400 transition shadow-[0_0_15px_rgba(52,211,153,0.2)]">
+            Save Match Stats
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Timeline Event Logger (Flashscore Style) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Add Event Form -->
+      <div class="bg-neutral-900/40 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+        <h3 class="text-base font-bold text-white border-b border-white/5 pb-2">Log Match Event</h3>
+        <form method="post" action="{% url 'add_match_event' match.id %}" class="mt-4 space-y-4">
+          {% csrf_token %}
+          <div>
+            <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Minute</label>
+            {{ event_form.minute }}
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Event Type</label>
+            {{ event_form.event_type }}
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Scorer/Card Player</label>
+            {{ event_form.player }}
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Details (Optional)</label>
+            {{ event_form.detail }}
+          </div>
+          <button type="submit" class="w-full mt-4 rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-neutral-950 hover:bg-emerald-400 transition">
+            Log Event & Alert Fans
+          </button>
+        </form>
+      </div>
+
+      <!-- Events List -->
+      <div class="lg:col-span-2 bg-neutral-900/40 border border-white/10 rounded-2xl p-6 backdrop-blur-md flex flex-col">
+        <h3 class="text-base font-bold text-white border-b border-white/5 pb-2">Match Timeline (Flashscore Audit)</h3>
+        
+        <div class="flex-1 mt-4 overflow-y-auto space-y-3 pr-2">
+          {% for event in events %}
+            <div class="flex items-center justify-between p-3 bg-neutral-950/40 rounded-xl border border-white/5 hover:border-white/10 transition">
+              <div class="flex items-center gap-3">
+                <span class="font-mono text-sm font-extrabold text-emerald-400">{{ event.minute }}'</span>
+                
+                <!-- Icon based on type -->
+                <span>
+                  {% if event.event_type == 'goal' %}
+                    ⚽
+                  {% elif event.event_type == 'own_goal' %}
+                    ❌
+                  {% elif event.event_type == 'yellow_card' %}
+                    🟨
+                  {% elif event.event_type == 'red_card' %}
+                    🟥
+                  {% endif %}
+                </span>
+
+                <div>
+                  <p class="text-sm font-bold text-white">{{ event.player.name }}</p>
+                  <p class="text-xs text-neutral-400">
+                    {{ event.get_event_type_display }} {% if event.detail %}({{ event.detail }}){% endif %}
+                  </p>
+                </div>
+              </div>
+              
+              <form method="post" action="{% url 'delete_match_event' event.id %}">
+                {% csrf_token %}
+                <button type="submit" class="text-neutral-500 hover:text-red-400 transition">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </form>
+            </div>
+          {% empty %}
+            <p class="text-center text-xs text-neutral-500 py-8">No match events logged yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

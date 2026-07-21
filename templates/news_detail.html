@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} — Tournament News{% endblock %}
+
+{% block content %}
+<!-- News Header Banner -->
+<section class="relative py-16 md:py-24 border-b border-white/10 bg-neutral-900/20">
+  <div class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.06),_transparent_55%)]"></div>
+  <div class="mx-auto max-w-4xl px-6">
+    
+    <!-- Top Action / Back Link -->
+    <a href="{% url 'tournament_detail' post.tournament.slug %}" class="inline-flex items-center gap-2 text-xs text-neutral-400 hover:text-white transition mb-8">
+      <span>←</span> Back to {{ post.tournament.name }}
+    </a>
+
+    <!-- Meta Tags -->
+    <div class="flex items-center gap-4 text-xs text-neutral-500 font-mono uppercase tracking-wider mb-6">
+      <span>{{ post.published_at|date:"d M Y" }}</span>
+      <span>•</span>
+      <span>By {{ post.author.username|default:"PES Staff" }}</span>
+      {% if post.is_ai_generated %}
+        <span>•</span>
+        <span class="rounded bg-emerald-500/10 px-2 py-0.5 text-emerald-400 font-bold border border-emerald-500/20">AI Assisted Report</span>
+      {% endif %}
+    </div>
+
+    <!-- Title -->
+    <h1 class="text-3xl font-black text-white sm:text-5xl tracking-tight leading-tight">
+      {{ post.title }}
+    </h1>
+  </div>
+</section>
+
+<!-- Content Area -->
+<section class="mx-auto max-w-4xl px-6 py-12">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+    
+    <!-- Article Body -->
+    <div class="lg:col-span-2 space-y-8">
+      {% if post.cover_image %}
+        <div class="overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
+          <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full object-cover max-h-[400px]">
+        </div>
+      {% endif %}
+
+      <div class="prose prose-invert prose-emerald max-w-none text-neutral-300 leading-relaxed text-sm sm:text-base space-y-4">
+        {{ post.body|linebreaks }}
+      </div>
+
+      <!-- Like / Social Bar -->
+      <div class="pt-6 border-t border-white/5 flex items-center justify-between">
+        <form method="post" action="{% url 'like_news_post' post.slug %}">
+          {% csrf_token %}
+          <button type="submit" class="flex items-center gap-2 rounded-full border border-white/10 px-6 py-2.5 text-sm font-semibold transition hover:bg-white/5 {% if is_liked %}bg-emerald-500/10 border-emerald-500/30 text-emerald-400{% else %}text-neutral-300{% endif %}">
+            👍 {% if is_liked %}Liked{% else %}Like Post{% endif %}
+            <span class="font-mono text-xs ml-1 bg-white/10 text-white rounded-full px-2 py-0.5">{{ likes_count }}</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Comments Sidebar -->
+    <div class="space-y-8">
+      <div class="bg-neutral-900/30 border border-white/10 rounded-3xl p-6 backdrop-blur-md">
+        <h3 class="text-base font-bold text-white mb-6">Article Comments</h3>
+
+        {% if user.is_authenticated %}
+          <form method="post" action="{% url 'add_news_comment' post.slug %}" class="mb-8 space-y-3">
+            {% csrf_token %}
+            <textarea name="body" placeholder="Write a comment..." rows="3" class="w-full rounded-xl border border-white/10 bg-neutral-950 px-4 py-3 text-sm text-white placeholder-neutral-500 focus:border-emerald-400 focus:outline-none transition" required></textarea>
+            <button type="submit" class="w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-neutral-950 hover:bg-emerald-400 transition">
+              Post Comment
+            </button>
+          </form>
+        {% else %}
+          <div class="p-4 bg-neutral-950/40 border border-white/5 rounded-xl text-center mb-8">
+            <p class="text-xs text-neutral-400">Join the discussion! Log in to post comments.</p>
+            <a href="{% url 'account_login' %}" class="mt-3 inline-block text-xs font-bold text-emerald-400 hover:text-emerald-300 transition">
+              Log In →
+            </a>
+          </div>
+        {% endif %}
+
+        <!-- Comments Feed -->
+        <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+          {% for comment in comments %}
+            <div class="p-3 bg-neutral-950/20 border border-white/5 rounded-xl">
+              <div class="flex items-center justify-between text-[10px] text-neutral-500 mb-1">
+                <span class="font-bold text-neutral-300">{{ comment.user.username }}</span>
+                <span>{{ comment.created_at|timesince }} ago</span>
+              </div>
+              <p class="text-sm text-neutral-300">{{ comment.body }}</p>
+            </div>
+          {% empty %}
+            <p class="text-center text-xs text-neutral-500 py-6">No comments yet. Write a comment to kick things off!</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

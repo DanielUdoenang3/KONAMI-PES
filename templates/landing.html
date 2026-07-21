@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="relative overflow-hidden">
+  <div class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_55%)]"></div>
+  <div class="mx-auto max-w-7xl px-6 pt-20 pb-24 text-center sm:pt-28">
+    <span class="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-emerald-300">
+      Community-run · Season live
+    </span>
+    <h1 class="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-6xl">
+      Every table. Every result.<br class="hidden sm:block"> One arena.
+    </h1>
+    <p class="mx-auto mt-6 max-w-2xl text-base text-neutral-400 sm:text-lg">
+      Follow every PES tournament we run — live standings, match results, news and predictions, all in one place.
+    </p>
+    <div class="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+      <a href="#tournaments" class="w-full rounded-full bg-emerald-500 px-8 py-3 text-sm font-semibold text-neutral-950 hover:bg-emerald-400 transition sm:w-auto">
+        Explore tournaments
+      </a>
+      <a href="#news" class="w-full rounded-full border border-white/15 px-8 py-3 text-sm font-semibold text-white hover:bg-white/5 transition sm:w-auto">
+        Latest news
+      </a>
+    </div>
+
+    <div class="mx-auto mt-16 grid max-w-2xl grid-cols-3 gap-6 border-t border-white/10 pt-10">
+      <div>
+        <p class="text-3xl font-bold text-white">{{ tournament_count }}</p>
+        <p class="mt-1 text-xs uppercase tracking-wide text-neutral-500">Tournaments</p>
+      </div>
+      <div>
+        <p class="text-3xl font-bold text-white">{{ player_count }}</p>
+        <p class="mt-1 text-xs uppercase tracking-wide text-neutral-500">Players</p>
+      </div>
+      <div>
+        <p class="text-3xl font-bold text-white">{{ match_count }}</p>
+        <p class="mt-1 text-xs uppercase tracking-wide text-neutral-500">Matches played</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if latest_updates %}
+<section class="border-y border-white/10 bg-neutral-900/60">
+  <div class="mx-auto flex max-w-7xl items-center gap-4 overflow-x-auto px-6 py-3 text-sm text-neutral-300">
+    <span class="shrink-0 rounded-full bg-red-500/15 px-3 py-1 text-xs font-semibold text-red-400">LIVE</span>
+    {% for update in latest_updates %}
+      <span class="shrink-0 after:ml-4 after:content-['•'] after:text-neutral-600 last:after:content-none">
+        {{ update.body }}
+      </span>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section id="tournaments" class="mx-auto max-w-7xl px-6 py-20">
+  <h2 class="text-2xl font-bold text-white sm:text-3xl">Active tournaments</h2>
+  <p class="mt-2 text-sm text-neutral-400">Jump into a table, check fixtures, or catch up on results.</p>
+
+  <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    {% for tournament in tournaments %}
+      <a href="{% url 'tournament_detail' tournament.slug %}" class="group relative overflow-hidden rounded-2xl border border-white/10 bg-neutral-900 p-6 transition hover:-translate-y-1 hover:border-white/20">
+        <div class="absolute inset-x-0 top-0 h-1" style="background-color: {{ tournament.primary_color }};"></div>
+        <span class="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+              style="background-color: {{ tournament.primary_color }}22; color: {{ tournament.primary_color }};">
+          {{ tournament.get_status_display }}
+        </span>
+        <h3 class="mt-4 text-lg font-semibold text-white">{{ tournament.name }}</h3>
+        <p class="mt-2 line-clamp-2 text-sm text-neutral-400">{{ tournament.description|default:"Follow the table, fixtures and results." }}</p>
+        <span class="mt-6 inline-flex items-center gap-1 text-sm font-medium text-emerald-400">
+          View tournament <span class="transition group-hover:translate-x-1">→</span>
+        </span>
+      </a>
+    {% empty %}
+      <p class="col-span-full rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-neutral-500">
+        No tournaments yet — add one from the admin to see it here.
+      </p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="border-t border-white/10 bg-neutral-900/40">
+  <div class="mx-auto max-w-7xl px-6 py-20">
+    <h2 class="text-2xl font-bold text-white sm:text-3xl">What you get</h2>
+    <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="rounded-2xl border border-white/10 p-6">
+        <h3 class="text-base font-semibold text-white">Live standings</h3>
+        <p class="mt-2 text-sm text-neutral-400">Tables update the moment the admin logs a result.</p>
+      </div>
+      <div class="rounded-2xl border border-white/10 p-6">
+        <h3 class="text-base font-semibold text-white">Score predictions</h3>
+        <p class="mt-2 text-sm text-neutral-400">Call the score before matchday and climb the leaderboard.</p>
+      </div>
+      <div class="rounded-2xl border border-white/10 p-6">
+        <h3 class="text-base font-semibold text-white">News & recaps</h3>
+        <p class="mt-2 text-sm text-neutral-400">Written and AI-assisted match reports after every round.</p>
+      </div>
+      <div class="rounded-2xl border border-white/10 p-6">
+        <h3 class="text-base font-semibold text-white">Ask the AI</h3>
+        <p class="mt-2 text-sm text-neutral-400">Not sure who's top? Just ask — it knows the live table.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="news" class="mx-auto max-w-7xl px-6 py-20">
+  <h2 class="text-2xl font-bold text-white sm:text-3xl">Latest news</h2>
+  <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    {% for post in latest_news %}
+      <a href="{% url 'news_detail' post.slug %}" class="group overflow-hidden rounded-2xl border border-white/10 bg-neutral-900">
+        {% if post.cover_image %}
+          <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="h-44 w-full object-cover transition group-hover:scale-105">
+        {% else %}
+          <div class="h-44 w-full bg-gradient-to-br from-emerald-500/20 to-neutral-900"></div>
+        {% endif %}
+        <div class="p-5">
+          <p class="text-xs uppercase tracking-wide text-neutral-500">{{ post.published_at|date:"M j, Y" }}</p>
+          <h3 class="mt-2 font-semibold text-white group-hover:text-emerald-400 transition">{{ post.title }}</h3>
+        </div>
+      </a>
+    {% empty %}
+      <p class="col-span-full rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-neutral-500">
+        No news posts yet.
+      </p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="border-t border-white/10">
+  <div class="mx-auto max-w-4xl px-6 py-20 text-center">
+    {% if user.is_authenticated %}
+      <h2 class="text-2xl font-bold text-white sm:text-3xl">Good to see you, {{ user.first_name|default:user.email }}</h2>
+      <p class="mt-3 text-neutral-400">Head to a tournament to comment, predict scores, and follow your favorite players.</p>
+      <a href="#tournaments" class="mt-8 inline-block rounded-full bg-emerald-500 px-8 py-3 text-sm font-semibold text-neutral-950 hover:bg-emerald-400 transition">
+        Browse tournaments
+      </a>
+    {% else %}
+      <h2 class="text-2xl font-bold text-white sm:text-3xl">Get in on the next matchday</h2>
+      <p class="mt-3 text-neutral-400">Create an account to comment, predict scores, and follow your favorite players.</p>
+      <a href="{% url 'account_signup' %}" class="mt-8 inline-block rounded-full bg-emerald-500 px-8 py-3 text-sm font-semibold text-neutral-950 hover:bg-emerald-400 transition">
+        Create free account
+      </a>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

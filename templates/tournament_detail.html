@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tournament.name }} — PES Arena{% endblock %}
+{% block description %}Follow live standings, results, and news for {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<!-- Tournament Header Banner -->
+<section class="relative overflow-hidden border-b border-white/10 py-16 sm:py-24">
+  {% if tournament.banner_image %}
+    <div class="absolute inset-0 -z-10 bg-cover bg-center opacity-25 filter blur-sm" style="background-image: url('{{ tournament.banner_image.url }}');"></div>
+  {% endif %}
+  <div class="absolute inset-0 -z-10 bg-gradient-to-b from-neutral-950 via-neutral-950/80 to-neutral-950"></div>
+  <div class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_var(--primary-glow),_transparent_60%)]" 
+       style="--primary-glow: {{ tournament.primary_color }}22;"></div>
+
+  <div class="mx-auto max-w-7xl px-6 flex flex-col md:flex-row items-center gap-8">
+    {% if tournament.logo %}
+      <img src="{{ tournament.logo.url }}" alt="{{ tournament.name }} Logo" class="h-28 w-28 rounded-2xl object-cover border-2 border-white/10 shadow-2xl bg-neutral-900">
+    {% else %}
+      <div class="h-28 w-28 rounded-2xl border-2 border-white/10 flex items-center justify-center text-4xl shadow-2xl bg-neutral-900" style="color: {{ tournament.primary_color }};">
+        🏆
+      </div>
+    {% endif %}
+    
+    <div class="text-center md:text-left flex-1">
+      <div class="flex flex-wrap items-center justify-center md:justify-start gap-3">
+        <span class="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+              style="background-color: {{ tournament.primary_color }}22; color: {{ tournament.primary_color }};">
+          {{ tournament.get_status_display }}
+        </span>
+        <span class="text-xs text-neutral-500 font-mono">
+          {{ tournament.start_date|date:"M Y" }} - {{ tournament.end_date|date:"M Y" }}
+        </span>
+      </div>
+      <h1 class="mt-4 text-3xl font-black tracking-tight text-white sm:text-5xl">
+        {{ tournament.name }}
+      </h1>
+      <p class="mt-3 max-w-2xl text-neutral-400 text-sm sm:text-base">
+        {{ tournament.description|default:"Follow the table, match results and schedules." }}
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Main Sections Navigation -->
+<div class="border-b border-white/5 bg-neutral-900/20 sticky top-0 backdrop-blur-md z-40">
+  <div class="mx-auto max-w-7xl px-6 flex gap-8 overflow-x-auto">
+    <a href="#standings" class="py-4 text-sm font-semibold border-b-2 border-transparent hover:text-white hover:border-white/20 transition whitespace-nowrap active-tab-indicator" style="border-color: {{ tournament.primary_color }};">
+      Standings Table
+    </a>
+    <a href="#fixtures" class="py-4 text-sm font-semibold border-b-2 border-transparent hover:text-white hover:border-white/20 transition whitespace-nowrap">
+      Matchdays & Fixtures
+    </a>
+    <a href="#players" class="py-4 text-sm font-semibold border-b-2 border-transparent hover:text-white hover:border-white/20 transition whitespace-nowrap">
+      Players
+    </a>
+    {% if news_posts %}
+      <a href="#news" class="py-4 text-sm font-semibold border-b-2 border-transparent hover:text-white hover:border-white/20 transition whitespace-nowrap">
+        News Feed
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="mx-auto max-w-7xl px-6 py-12 space-y-20">
+  
+  <!-- Standings Table -->
+  <section id="standings" class="scroll-mt-24">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-xl font-extrabold text-white sm:text-2xl">League Standings</h2>
+        <p class="text-xs text-neutral-500 mt-1">Calculated dynamically. Sorted by PTS, GD, Goals For, then Card points.</p>
+      </div>
+      <span class="inline-flex items-center gap-1.5 rounded-md bg-neutral-900 border border-white/5 px-2.5 py-1 text-xs text-neutral-400">
+        <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Live Update
+      </span>
+    </div>
+
+    <div class="overflow-x-auto rounded-2xl border border-white/10 bg-neutral-900/30 backdrop-blur-sm">
+      <table class="w-full border-collapse text-left text-sm text-neutral-300">
+        <thead>
+          <tr class="border-b border-white/10 bg-neutral-950/60 font-semibold uppercase text-xs text-neutral-400">
+            <th class="px-6 py-4 text-center w-12">#</th>
+            <th class="px-6 py-4">Player</th>
+            <th class="px-4 py-4 text-center">P</th>
+            <th class="px-4 py-4 text-center text-emerald-400">W</th>
+            <th class="px-4 py-4 text-center text-neutral-400">D</th>
+            <th class="px-4 py-4 text-center text-red-400">L</th>
+            <th class="px-4 py-4 text-center">GF</th>
+            <th class="px-4 py-4 text-center">GA</th>
+            <th class="px-4 py-4 text-center">GD</th>
+            <th class="px-4 py-4 text-center">YC</th>
+            <th class="px-4 py-4 text-center">RC</th>
+            <th class="px-6 py-4 text-center font-bold text-white bg-white/5">PTS</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5 font-medium">
+          {% for row in standings %}
+            <tr class="hover:bg-white/5 transition">
+              <td class="px-6 py-4 text-center font-bold text-xs text-neutral-500">{{ forloop.counter }}</td>
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  {% if row.player.avatar %}
+                    <img src="{{ row.player.avatar.url }}" alt="" class="h-7 w-7 rounded-full object-cover">
+                  {% else %}
+                    <div class="h-7 w-7 rounded-full bg-white/10 flex items-center justify-center text-xs">
+                      👤
+                    </div>
+                  {% endif %}
+                  <div>
+                    <span class="text-white font-semibold">{{ row.player.gamer_tag|default:row.player.name }}</span>
+                    <span class="text-[10px] text-neutral-500 block">{{ row.player.name }}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="px-4 py-4 text-center font-semibold text-neutral-400">{{ row.played }}</td>
+              <td class="px-4 py-4 text-center text-emerald-400 font-semibold">{{ row.won }}</td>
+              <td class="px-4 py-4 text-center text-neutral-400 font-semibold">{{ row.drawn }}</td>
+              <td class="px-4 py-4 text-center text-red-400 font-semibold">{{ row.lost }}</td>
+              <td class="px-4 py-4 text-center text-neutral-400">{{ row.gf }}</td>
+              <td class="px-4 py-4 text-center text-neutral-400">{{ row.ga }}</td>
+              <td class="px-4 py-4 text-center font-semibold {% if row.gd > 0 %}text-emerald-400{% elif row.gd < 0 %}text-red-400{% else %}text-neutral-400{% endif %}">
+                {% if row.gd > 0 %}+{% endif %}{{ row.gd }}
+              </td>
+              <td class="px-4 py-4 text-center text-amber-500/80 font-mono text-xs">{{ row.yellow_cards }}🟨</td>
+              <td class="px-4 py-4 text-center text-red-500/80 font-mono text-xs">{{ row.red_cards }}🟥</td>
+              <td class="px-6 py-4 text-center font-black text-white bg-white/5 text-base">{{ row.pts }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="12" class="px-6 py-12 text-center text-neutral-500">
+                No participants or matches completed yet.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Matchdays & Fixtures -->
+  <section id="fixtures" class="scroll-mt-24">
+    <h2 class="text-xl font-extrabold text-white sm:text-2xl mb-2">Matchdays & Fixtures</h2>
+    <p class="text-xs text-neutral-500 mb-8">Click on any fixture to see stats, match events timeline, and comment.</p>
+    
+    <div class="space-y-10">
+      {% for matchday_name, matches in matchdays.items %}
+        <div class="space-y-4">
+          <h3 class="text-sm font-extrabold uppercase tracking-widest text-neutral-400 border-l-2 pl-3" style="border-color: {{ tournament.primary_color }};">
+            {{ matchday_name }}
+          </h3>
+          
+          <div class="grid gap-4 sm:grid-cols-2">
+            {% for m in matches %}
+              <a href="{% url 'match_detail' m.id %}" class="flex flex-col justify-between p-5 bg-neutral-900 border border-white/10 hover:border-white/20 rounded-2xl transition hover:-translate-y-0.5 group">
+                <div class="flex items-center justify-between text-xs text-neutral-500 mb-4">
+                  <span class="font-mono">{{ m.scheduled_at|date:"d M Y @ H:i"|default:"TBD" }}</span>
+                  <span class="uppercase font-semibold px-2 py-0.5 rounded border" 
+                        style="color: {{ tournament.primary_color }}; border-color: {{ tournament.primary_color }}33; background-color: {{ tournament.primary_color }}0a;">
+                    {{ m.get_status_display }}
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-between gap-4 my-2">
+                  <!-- Home -->
+                  <div class="flex items-center gap-3 flex-1 min-w-0">
+                    {% if m.home and m.home.player.avatar %}
+                      <img src="{{ m.home.player.avatar.url }}" alt="" class="h-8 w-8 rounded-full object-cover">
+                    {% else %}
+                      <div class="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center text-xs">👤</div>
+                    {% endif %}
+                    <span class="text-white font-bold truncate group-hover:text-emerald-400 transition">
+                      {{ m.home_name }}
+                    </span>
+                  </div>
+
+                  <!-- Score / VS -->
+                  <div class="flex items-center justify-center font-mono font-black text-lg px-4 py-1.5 rounded-lg bg-neutral-950 text-white min-w-20">
+                    {% if m.status == 'scheduled' %}
+                      <span class="text-xs uppercase text-neutral-500">VS</span>
+                    {% else %}
+                      <span>{{ m.home_score }}</span>
+                      <span class="text-neutral-600 mx-1">:</span>
+                      <span>{{ m.away_score }}</span>
+                    {% endif %}
+                  </div>
+
+                  <!-- Away -->
+                  <div class="flex items-center gap-3 flex-1 min-w-0 flex-row-reverse text-right">
+                    {% if m.away and m.away.player.avatar %}
+                      <img src="{{ m.away.player.avatar.url }}" alt="" class="h-8 w-8 rounded-full object-cover">
+                    {% else %}
+                      <div class="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center text-xs">👤</div>
+                    {% endif %}
+                    <span class="text-white font-bold truncate group-hover:text-emerald-400 transition">
+                      {{ m.away_name }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between text-xs text-neutral-500 mt-4 pt-3 border-t border-white/5">
+                  <span class="truncate">📍 {{ m.venue|default:"PES Stadium" }}</span>
+                  <span class="text-emerald-400 font-bold group-hover:translate-x-1 transition duration-200">View Match Center →</span>
+                </div>
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      {% empty %}
+        <p class="text-center text-xs text-neutral-500 py-10">No fixtures scheduled for this tournament yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Players List -->
+  <section id="players" class="scroll-mt-24">
+    <h2 class="text-xl font-extrabold text-white sm:text-2xl mb-2">Registered Participants</h2>
+    <p class="text-xs text-neutral-500 mb-8">Follow players stats and bio details.</p>
+    
+    <div class="grid gap-6 grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
+      {% for part in participants %}
+        <div class="flex flex-col items-center p-4 bg-neutral-900 border border-white/10 rounded-2xl text-center">
+          {% if part.player.avatar %}
+            <img src="{{ part.player.avatar.url }}" alt="{{ part.player.name }}" class="h-20 w-20 rounded-full object-cover border border-white/10 shadow-lg">
+          {% else %}
+            <div class="h-20 w-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-2xl shadow-lg">
+              👤
+            </div>
+          {% endif %}
+          <h3 class="mt-4 font-bold text-white truncate w-full">{{ part.player.gamer_tag|default:part.player.name }}</h3>
+          <p class="text-[10px] text-neutral-500 truncate w-full mt-0.5">{{ part.player.name }}</p>
+          <p class="mt-3 text-xs text-neutral-400 line-clamp-2 w-full px-1 italic">
+            {{ part.player.bio|default:"No bio logged." }}
+          </p>
+        </div>
+      {% empty %}
+        <p class="col-span-full text-center text-xs text-neutral-500 py-10">No registered players in this tournament yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- News Feed -->
+  {% if news_posts %}
+    <section id="news" class="scroll-mt-24">
+      <h2 class="text-xl font-extrabold text-white sm:text-2xl mb-8">Latest Tournament News</h2>
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {% for post in news_posts %}
+          <a href="{% url 'news_detail' post.slug %}" class="group overflow-hidden rounded-2xl border border-white/10 bg-neutral-900/60 backdrop-blur-sm">
+            {% if post.cover_image %}
+              <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="h-44 w-full object-cover transition group-hover:scale-105">
+            {% else %}
+              <div class="h-44 w-full bg-gradient-to-br from-emerald-500/10 to-neutral-900"></div>
+            {% endif %}
+            <div class="p-5">
+              <div class="flex items-center justify-between text-[10px] uppercase tracking-wider text-neutral-500">
+                <span>{{ post.published_at|date:"M j, Y" }}</span>
+                {% if post.is_ai_generated %}
+                  <span class="rounded bg-emerald-500/10 px-1.5 py-0.5 text-emerald-400 font-bold border border-emerald-500/20">AI Assisted</span>
+                {% endif %}
+              </div>
+              <h3 class="mt-2 font-bold text-white group-hover:text-emerald-400 transition leading-snug">{{ post.title }}</h3>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+</div>
+{% endblock %}

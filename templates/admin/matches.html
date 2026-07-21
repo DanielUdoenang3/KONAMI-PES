@@ -1,0 +1,89 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Matches — PES Control{% endblock %}
+
+{% block header_title %}Matches{% endblock %}
+{% block header_description %}View and update match schedules, details and timeline events{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'create_match' %}" class="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-neutral-950 hover:bg-emerald-400 transition shadow-[0_0_15px_rgba(52,211,153,0.2)]">
+    + Add Match
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="rounded-2xl border border-white/10 bg-neutral-900/40 backdrop-blur-md overflow-hidden flex flex-col">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-white/5 bg-neutral-950/20 text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+            <th class="p-4 pl-6">Match Description</th>
+            <th class="p-4">Tournament / Stage</th>
+            <th class="p-4">Round & Leg</th>
+            <th class="p-4">Scheduled At</th>
+            <th class="p-4">Score</th>
+            <th class="p-4">Status</th>
+            <th class="p-4 text-right pr-6">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5 text-sm text-neutral-300">
+          {% for match in matches %}
+            <tr class="hover:bg-white/5 transition">
+              <td class="p-4 pl-6">
+                <div class="font-medium text-white flex items-center gap-2">
+                  <span>{{ match.home_name }}</span>
+                  <span class="text-neutral-500 text-xs">vs</span>
+                  <span>{{ match.away_name }}</span>
+                </div>
+              </td>
+              <td class="p-4">
+                <div class="text-xs text-white font-medium">{{ match.tournament.name|default:"General Match" }}</div>
+                <div class="text-[10px] text-neutral-500 mt-0.5">{{ match.stage.name|default:"General Stage" }}</div>
+              </td>
+              <td class="p-4">
+                <div class="text-xs text-neutral-300">{{ match.round_name }}</div>
+                <div class="text-[10px] text-neutral-500 mt-0.5">Leg {{ match.leg }}</div>
+              </td>
+              <td class="p-4 text-xs text-neutral-400">
+                {{ match.scheduled_at|date:"M d, Y H:i" }}
+              </td>
+              <td class="p-4 font-mono font-bold text-emerald-400">
+                {% if match.status == 'completed' or match.status == 'active' %}
+                  {{ match.home_score }} - {{ match.away_score }}
+                {% else %}
+                  -- : --
+                {% endif %}
+              </td>
+              <td class="p-4">
+                {% if match.status == 'completed' %}
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Completed
+                  </span>
+                {% elif match.status == 'active' %}
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20">
+                    <span class="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse"></span> Live / Active
+                  </span>
+                {% elif match.status == 'scheduled' %}
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    Scheduled
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-800 text-neutral-400 border border-white/5">
+                    Postponed
+                  </span>
+                {% endif %}
+              </td>
+              <td class="p-4 text-right pr-6">
+                <a href="{% url 'edit_match' match.id %}" class="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition">Edit & Log Events</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="p-8 text-center text-xs text-neutral-500">No matches found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

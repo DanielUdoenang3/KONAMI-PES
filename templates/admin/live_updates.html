@@ -1,0 +1,57 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Live Updates — PES Control{% endblock %}
+
+{% block header_title %}Live Updates{% endblock %}
+{% block header_description %}Short ticker-style real-time updates and results{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'create_live_update' %}" class="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-neutral-950 hover:bg-emerald-400 transition shadow-[0_0_15px_rgba(52,211,153,0.2)]">
+    + Post Update
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="rounded-2xl border border-white/10 bg-neutral-900/40 backdrop-blur-md overflow-hidden flex flex-col">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-white/5 bg-neutral-950/20 text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+            <th class="p-4 pl-6">Update Content</th>
+            <th class="p-4">Tournament</th>
+            <th class="p-4">Associated Match</th>
+            <th class="p-4">Posted At</th>
+            <th class="p-4 text-right pr-6">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5 text-sm text-neutral-300">
+          {% for update in updates %}
+            <tr class="hover:bg-white/5 transition">
+              <td class="p-4 pl-6 font-semibold text-white max-w-md">{{ update.body }}</td>
+              <td class="p-4 text-xs text-neutral-400">
+                <span class="inline-flex items-center px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs">
+                  {{ update.tournament.name }}
+                </span>
+              </td>
+              <td class="p-4 text-xs text-neutral-400">
+                {% if update.match %}
+                  {{ update.match }}
+                {% else %}
+                  <span class="text-neutral-600">None</span>
+                {% endif %}
+              </td>
+              <td class="p-4 text-xs text-neutral-400">{{ update.posted_at|date:"M d, Y H:i" }}</td>
+              <td class="p-4 text-right pr-6">
+                <a href="{% url 'edit_live_update' update.id %}" class="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition">Edit</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="p-8 text-center text-xs text-neutral-500">No live updates recorded yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

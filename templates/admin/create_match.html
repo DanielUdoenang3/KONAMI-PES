@@ -1,0 +1,328 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Create Match — PES Control{% endblock %}
+
+{% block header_title %}Create Match{% endblock %}
+{% block header_description %}Schedule a new match under a tournament stage{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'admin_matches' %}" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-300 hover:text-white rounded-xl border border-white/10 hover:bg-white/5 transition">
+    ← Back to matches
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+
+  {# ── Step 1: Pick a Tournament ─────────────────────────────────────── #}
+  <div class="rounded-2xl border border-white/10 bg-neutral-900/40 backdrop-blur-md p-6 space-y-4">
+    <div class="flex items-center gap-3">
+      <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-bold border border-emerald-500/20">1</span>
+      <h2 class="text-base font-bold text-white">Choose Tournament</h2>
+    </div>
+    <p class="text-xs text-neutral-500">Selecting a tournament will load its stages, groups and registered players.</p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2" id="tournament-grid">
+      {% for t in tournaments %}
+        <button
+          type="button"
+          data-id="{{ t.id }}"
+          data-name="{{ t.name }}"
+          onclick="selectTournament({{ t.id }}, '{{ t.name|escapejs }}', '{{ t.primary_color }}')"
+          class="tournament-card relative group flex flex-col gap-2 rounded-xl border p-4 text-left transition hover:-translate-y-0.5 cursor-pointer
+                 {% if selected_tournament and selected_tournament.id == t.id %}border-emerald-500/60 bg-emerald-500/5{% else %}border-white/10 bg-neutral-950/30 hover:border-white/20{% endif %}"
+        >
+          <div class="absolute inset-x-0 top-0 h-0.5 rounded-t-xl" style="background-color: {{ t.primary_color }};"></div>
+          <div class="flex items-center gap-3">
+            {% if t.logo %}
+              <img src="{{ t.logo.url }}" alt="" class="h-8 w-8 rounded-lg object-cover flex-shrink-0">
+            {% else %}
+              <span class="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                    style="background-color: {{ t.primary_color }}22; color: {{ t.primary_color }};">
+                {{ t.name|slice:":2"|upper }}
+              </span>
+            {% endif %}
+            <div class="min-w-0">
+              <p class="text-sm font-bold text-white truncate">{{ t.name }}</p>
+              <p class="text-[10px] font-medium uppercase tracking-wide mt-0.5"
+                 style="color: {{ t.primary_color }};">{{ t.get_status_display }}</p>
+            </div>
+          </div>
+          {% if selected_tournament and selected_tournament.id == t.id %}
+            <span class="absolute top-2 right-3 text-emerald-400 text-xs">✓ Selected</span>
+          {% endif %}
+        </button>
+      {% empty %}
+        <p class="col-span-full text-center text-xs text-neutral-500 py-6">No tournaments found. <a href="{% url 'create_tournament' %}" class="text-emerald-400 hover:underline">Create one first →</a></p>
+      {% endfor %}
+    </div>
+  </div>
+
+  {# ── Step 2 + 3: Match details (shown only once tournament is selected) ── #}
+  <div id="match-form-section" class="{% if not selected_tournament %}opacity-40 pointer-events-none select-none{% endif %} space-y-6 transition-opacity duration-300">
+
+    {% if form.errors %}
+      <div class="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
+        <p class="font-bold mb-2">Please correct the following errors:</p>
+        <ul class="list-disc list-inside space-y-1">
+          {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+              <li>{{ field|capfirst }}: {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <form method="post" id="match-form" class="space-y-6">
+      {% csrf_token %}
+      {# Hidden field carries the tournament selection back to POST #}
+      <input type="hidden" name="tournament_id" id="selected-tournament-id" value="{{ selected_tournament.id|default:'' }}">
+
+      {# ── Stage & Group ─────────────────────────────────────────────── #}
+      <div class="rounded-2xl border border-white/10 bg-neutral-900/40 backdrop-blur-md p-6 space-y-4">
+        <div class="flex items-center gap-3">
+          <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-bold border border-emerald-500/20">2</span>
+          <h2 class="text-base font-bold text-white">Stage, Group & Schedule</h2>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Tournament Stage <span class="text-neutral-500">(Optional)</span></label>
+            <select name="stage" id="id_stage"
+                    class="w-full rounded-xl border border-white/10 bg-neutral-950 px-4 py-2.5 text-white text-sm focus:border-emerald-400 focus:outline-none transition"
+                    onchange="onStageChange(this.value)">
+              <option value="">— Select a stage —</option>
+              {% for field_choice in form.stage %}
+                <option value="{{ field_choice.data.value }}"
+                        {% if field_choice.data.selected %}selected{% endif %}>
+                  {{ field_choice.data.label }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Group <span class="text-neutral-600">(Optional)</span></label>
+            <select name="group" id="id_group"
+                    class="w-full rounded-xl border border-white/10 bg-neutral-950 px-4 py-2.5 text-white text-sm focus:border-emerald-400 focus:outline-none transition">
+              <option value="">— No group —</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Matchday / Round <span class="text-red-400">*</span></label>
+            {{ form.round_name }}
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Leg</label>
+            {{ form.leg }}
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Kick-off Date & Time</label>
+            {{ form.scheduled_at }}
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Status</label>
+            {{ form.status }}
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Venue / Stadium</label>
+            {{ form.venue }}
+          </div>
+        </div>
+      </div>
+
+      {# ── Home vs Away ──────────────────────────────────────────────── #}
+      <div class="rounded-2xl border border-white/10 bg-neutral-900/40 backdrop-blur-md p-6 space-y-4">
+        <div class="flex items-center gap-3">
+          <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-bold border border-emerald-500/20">3</span>
+          <h2 class="text-base font-bold text-white">Home &amp; Away Players</h2>
+        </div>
+        <p class="text-xs text-neutral-500">Only players registered in the selected tournament are shown. Choosing a Home player removes them from the Away list.</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {# Home player #}
+          <div>
+            <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Home Player <span class="text-neutral-500">(Optional)</span></label>
+            <div id="home-avatar-preview" class="hidden mb-2 flex items-center gap-3 p-3 rounded-xl bg-neutral-950/50 border border-white/5">
+              <div id="home-avatar-circle" class="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center text-lg">👤</div>
+              <div>
+                <p id="home-name-label" class="text-sm font-bold text-white"></p>
+                <p class="text-[10px] text-emerald-400 uppercase font-semibold tracking-wide">Home</p>
+              </div>
+            </div>
+            <select name="home" id="id_home"
+                    class="w-full rounded-xl border border-white/10 bg-neutral-950 px-4 py-2.5 text-white text-sm focus:border-emerald-400 focus:outline-none transition"
+                    onchange="onHomeChange(this)">
+              <option value="">— Select home player —</option>
+              {% for field_choice in form.home %}
+                <option value="{{ field_choice.data.value }}"
+                        {% if field_choice.data.selected %}selected{% endif %}>
+                  {{ field_choice.data.label }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          {# Away player #}
+          <div>
+            <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Away Player <span class="text-neutral-500">(Optional)</span></label>
+            <div id="away-avatar-preview" class="hidden mb-2 flex items-center gap-3 p-3 rounded-xl bg-neutral-950/50 border border-white/5">
+              <div id="away-avatar-circle" class="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center text-lg">👤</div>
+              <div>
+                <p id="away-name-label" class="text-sm font-bold text-white"></p>
+                <p class="text-[10px] text-blue-400 uppercase font-semibold tracking-wide">Away</p>
+              </div>
+            </div>
+            <select name="away" id="id_away"
+                    class="w-full rounded-xl border border-white/10 bg-neutral-950 px-4 py-2.5 text-white text-sm focus:border-emerald-400 focus:outline-none transition"
+                    onchange="onAwayChange(this)">
+              <option value="">— Select away player —</option>
+              {% for field_choice in form.away %}
+                <option value="{{ field_choice.data.value }}"
+                        {% if field_choice.data.selected %}selected{% endif %}>
+                  {{ field_choice.data.label }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {# ── Actions ───────────────────────────────────────────────────── #}
+      <div class="flex items-center justify-end gap-4 pt-2">
+        <a href="{% url 'admin_matches' %}" class="rounded-xl border border-white/15 px-6 py-3 text-sm font-semibold text-white hover:bg-white/5 transition">
+          Cancel
+        </a>
+        <button type="submit" id="submit-btn"
+                class="rounded-xl bg-emerald-500 px-10 py-3 text-sm font-semibold text-neutral-950 hover:bg-emerald-400 transition shadow-[0_0_20px_rgba(52,211,153,0.25)] disabled:opacity-40 disabled:cursor-not-allowed">
+          Create Match
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# Participants JSON for JS consumption — pre-serialized by json.dumps in the view #}
+<script id="participants-data" type="application/json">{{ participants_json|safe }}</script>
+
+<script>
+  // ─── State ───────────────────────────────────────────────────────────────
+  let allParticipants = [];
+  try {
+    allParticipants = JSON.parse(document.getElementById('participants-data').textContent);
+  } catch(e) {}
+
+  // ─── Tournament selection ────────────────────────────────────────────────
+  function selectTournament(id, name, color) {
+    // Re-submit the page with the chosen tournament_id as a GET param to let
+    // Django render the correct querysets (avoids losing form state on hard nav).
+    const url = new URL(window.location.href);
+    url.searchParams.set('tournament_id', id);
+    window.location.href = url.toString();
+  }
+
+  // ─── Stage → Groups (AJAX) ──────────────────────────────────────────────
+  function onStageChange(stageId) {
+    const groupEl = document.getElementById('id_group');
+    groupEl.innerHTML = '<option value="">— No group —</option>';
+    if (!stageId) return;
+
+    fetch(`/ajax/groups/${stageId}/`)
+      .then(r => r.json())
+      .then(data => {
+        data.groups.forEach(g => {
+          const o = new Option(g.name, g.id);
+          groupEl.add(o);
+        });
+      })
+      .catch(() => {});
+  }
+
+  // ─── Home → Away exclusion ───────────────────────────────────────────────
+  function getParticipantLabel(id) {
+    const p = allParticipants.find(p => String(p.id) === String(id));
+    return p ? p.label : null;
+  }
+
+  function rebuildAwayDropdown(excludeId) {
+    const awayEl = document.getElementById('id_away');
+    const currentAway = awayEl.value;
+    awayEl.innerHTML = '<option value="">— Select away player —</option>';
+
+    allParticipants.forEach(p => {
+      if (String(p.id) === String(excludeId)) return; // skip home pick
+      const o = new Option(p.label, p.id);
+      if (String(p.id) === String(currentAway) && String(p.id) !== String(excludeId)) {
+        o.selected = true;
+      }
+      awayEl.add(o);
+    });
+
+    // Re-fire away preview with new state
+    onAwayChange(awayEl);
+  }
+
+  function onHomeChange(sel) {
+    const val = sel.value;
+    const preview = document.getElementById('home-avatar-preview');
+    const nameEl = document.getElementById('home-name-label');
+
+    if (val) {
+      const label = getParticipantLabel(val);
+      nameEl.textContent = label || '—';
+      preview.classList.remove('hidden');
+      preview.classList.add('flex');
+    } else {
+      preview.classList.add('hidden');
+      preview.classList.remove('flex');
+    }
+
+    rebuildAwayDropdown(val);
+  }
+
+  function onAwayChange(sel) {
+    const val = sel.value;
+    const preview = document.getElementById('away-avatar-preview');
+    const nameEl = document.getElementById('away-name-label');
+
+    if (val) {
+      const label = getParticipantLabel(val);
+      nameEl.textContent = label || '—';
+      preview.classList.remove('hidden');
+      preview.classList.add('flex');
+    } else {
+      preview.classList.add('hidden');
+      preview.classList.remove('flex');
+    }
+  }
+
+  // ─── On page load: re-init dropdowns if a tournament was already picked ──
+  document.addEventListener('DOMContentLoaded', () => {
+    const homeEl = document.getElementById('id_home');
+    const stageEl = document.getElementById('id_stage');
+
+    if (homeEl && homeEl.value) onHomeChange(homeEl);
+    if (stageEl && stageEl.value) onStageChange(stageEl.value);
+
+    // Highlight the currently selected tournament card
+    const selectedId = document.getElementById('selected-tournament-id').value;
+    if (selectedId) {
+      document.querySelectorAll('.tournament-card').forEach(card => {
+        if (card.dataset.id === selectedId) {
+          card.classList.add('border-emerald-500/60', 'bg-emerald-500/5');
+          card.classList.remove('border-white/10', 'bg-neutral-950/30');
+        }
+      });
+      // Unlock the form section
+      const formSection = document.getElementById('match-form-section');
+      formSection.classList.remove('opacity-40', 'pointer-events-none', 'select-none');
+    }
+  });
+</script>
+{% endblock %}

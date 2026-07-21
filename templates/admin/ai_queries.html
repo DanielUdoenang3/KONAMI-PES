@@ -1,0 +1,56 @@
+{% extends "admin_base.html" %}
+
+{% block title %}AI Queries — PES Control{% endblock %}
+
+{% block header_title %}AI Queries{% endblock %}
+{% block header_description %}Audit logs of user interactions with the AI assistant{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'admin_ai_queries' %}" class="rounded-xl border border-white/10 px-4 py-2 text-sm font-semibold text-neutral-300 hover:text-white hover:bg-white/5 transition">
+    Refresh Logs
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="rounded-2xl border border-white/10 bg-neutral-900/40 backdrop-blur-md overflow-hidden flex flex-col">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-white/5 bg-neutral-950/20 text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+            <th class="p-4 pl-6">User</th>
+            <th class="p-4">Tournament Scope</th>
+            <th class="p-4">Question Asked</th>
+            <th class="p-4">AI Response</th>
+            <th class="p-4 pr-6">Created At</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5 text-sm text-neutral-300">
+          {% for query in queries %}
+            <tr class="hover:bg-white/5 transition">
+              <td class="p-4 pl-6">
+                <span class="font-semibold text-white">{{ query.user.username|default:"Anonymous" }}</span>
+                <div class="text-[10px] text-neutral-500 mt-0.5">{{ query.user.email|default:"" }}</div>
+              </td>
+              <td class="p-4 text-xs text-neutral-400">
+                {% if query.tournament %}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs">
+                    {{ query.tournament.name }}
+                  </span>
+                {% else %}
+                  <span class="text-neutral-500">General Info</span>
+                {% endif %}
+              </td>
+              <td class="p-4 font-medium text-white italic max-w-xs truncate">"{{ query.question }}"</td>
+              <td class="p-4 text-xs text-neutral-400 max-w-sm truncate">{{ query.answer }}</td>
+              <td class="p-4 text-xs text-neutral-400 pr-6">{{ query.created_at|date:"M. d, Y H:i" }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="p-8 text-center text-xs text-neutral-500">No AI interaction logs stored yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
