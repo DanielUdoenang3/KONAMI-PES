@@ -33,7 +33,7 @@ SECRET_KEY = 'django-insecure-+sce623np4!vd^k7-t*tkq)&_*%qfszxnf!d4vt=bmzxejeeb8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["konami-gqj0.onrender.com", "localhost", "127.0.0.1"]
 
 
 # Application definition
